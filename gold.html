@@ -1,327 +1,1112 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Expense Tracker Pro - Fixed</title>
-    <style>
-        :root {
-            --primary: #2563eb;
-            --secondary: #0f172a;
-            --accent: #f59e0b;
-            --success: #10b981;
-            --weight: #8b5cf6;
-            --danger: #ef4444;
-            --bg: #f1f5f9;
-            --card: #ffffff;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<meta name="color-scheme" content="light dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Gold Tracker">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A5%87%3C/text%3E%3C/svg%3E">
+<title>Gold &amp; Silver Tracker</title>
+<style>
+  :root {
+    --primary: #2563eb;
+    --bg: #f1f5f9;
+    --card: #ffffff;
+    --field: #ffffff;
+    --text: #0f172a;
+    --muted: #64748b;
+    --line: #e2e8f0;
+    --dash: #0f172a;
+    --gold: #f0b429;
+    --silver: #cbd5e1;
+    --success: #047857;
+    --danger: #dc2626;
+    --saved: #b45309;
+    --warn: #b45309;
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --primary: #3b82f6;
+      --bg: #0b1220;
+      --card: #131c2e;
+      --field: #0e1626;
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --line: #26324a;
+      --dash: #050a14;
+      --success: #34d399;
+      --danger: #f87171;
+      --saved: #fbbf24;
+      --warn: #fbbf24;
+    }
+  }
 
-        body { 
-            font-family: 'Inter', system-ui, sans-serif; 
-            background: var(--bg); margin: 0; padding-bottom: 100px; 
-            color: #1e293b;
-        }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+  }
+  body.modal-open { overflow: hidden; }
+  [hidden] { display: none !important; }
+  button, input, select { font: inherit; touch-action: manipulation; }
+  .vh { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; pointer-events: none; }
 
-        /* STICKY TOP DASHBOARD - FORCED LEFT AND RIGHT ALIGNMENT */
-        .top-dash {
-            position: sticky; top: 0; z-index: 100;
-            background: var(--secondary); color: white;
-            padding: 12px 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            display: flex; justify-content: space-between; align-items: center;
-            box-sizing: border-box; width: 100%;
-        }
-        
-        .total-box { display: flex; gap: 12px; align-items: center; }
-        .total-box.left-align { text-align: left; }
-        .total-box.right-align { text-align: right; }
-        
-        /* Inner divider handling */
-        .dash-divider { border-left: 1px solid rgba(255,255,255,0.2); padding-left: 12px; }
-        
-        .label-text { font-size: 9px; color: #94a3b8; font-weight: 700; letter-spacing: 0.05em; display: block; margin-bottom: 2px;}
-        .inr-text { font-size: 1.1rem; font-weight: 800; color: var(--success); display: block; }
-        .gram-text { font-size: 1.1rem; font-weight: 800; color: var(--weight); display: block; }
+  /* ---------- Sticky totals ---------- */
+  .top-dash {
+    position: sticky; top: 0; z-index: 100;
+    display: grid; grid-template-columns: 1fr 1fr;
+    background: var(--dash); color: #fff;
+    padding: calc(env(safe-area-inset-top, 0px) + 10px) max(14px, env(safe-area-inset-right)) 10px max(14px, env(safe-area-inset-left));
+    box-shadow: 0 2px 10px rgba(0,0,0,.25);
+  }
+  .metal { display: flex; flex-direction: column; min-width: 0; gap: 1px; }
+  .metal + .metal { border-left: 1px solid rgba(255,255,255,.18); padding-left: 14px; }
+  .m-name { font-size: 12px; font-weight: 600; color: #94a3b8; }
+  .m-grams { font-size: clamp(1.25rem, 6vw, 1.7rem); font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.15; }
+  .m-gold .m-grams { color: var(--gold); }
+  .m-silver .m-grams { color: var(--silver); }
+  .m-cost { font-size: 13px; color: #e2e8f0; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  .m-cost small { color: #94a3b8; font-size: 11px; margin-right: 4px; }
+  .m-cost b { font-weight: 700; }
 
-        .container { max-width: 1200px; margin: 15px auto; padding: 0 12px; }
+  /* ---------- Page ---------- */
+  .wrap {
+    max-width: 1200px; margin: 0 auto;
+    padding: 12px max(12px, env(safe-area-inset-right)) 0 max(12px, env(safe-area-inset-left));
+  }
+  .filter-row { display: flex; gap: 10px; align-items: flex-end; margin-bottom: 8px; }
+  .filter-row select { width: auto; min-width: 116px; }
+  .count { font-size: 13px; color: var(--muted); margin: 2px 2px 10px; }
 
-        /* YEAR & RATE BAR */
-        .filter-row { 
-            margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;
-            background: white; padding: 10px; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
-        select { padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: 600; font-size: 14px; outline: none; }
+  .banner {
+    display: flex; gap: 12px; align-items: center; justify-content: space-between;
+    background: var(--card);
+    border: 1px solid var(--warn);
+    background: color-mix(in srgb, var(--warn) 14%, var(--card));
+    border: 1px solid color-mix(in srgb, var(--warn) 45%, var(--line));
+    border-radius: 12px; padding: 10px 12px; margin-bottom: 12px; font-size: 14px;
+  }
 
-        /* ITEM CARDS */
-        .expense-list { display: flex; flex-direction: column; gap: 12px; }
-        .item-card {
-            background: var(--card); border-radius: 12px; padding: 15px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;
-            display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
-        }
-        .full-width { grid-column: span 2; }
-        
-        label { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 4px; }
-        input { width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; outline: none; transition: border 0.2s; }
-        input:focus { border-color: var(--primary); }
+  .banner .btn-sm { white-space: nowrap; flex: none; }
 
-        /* DISCOUNT CALCULATION AREA */
-        .calc-display { margin-top: 8px; font-size: 12px; font-weight: 700; line-height: 1.4; }
-        .net-val { color: var(--success); display: block; }
-        .diff-val { color: var(--danger); font-size: 11px; display: block; }
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 14px; margin-bottom: 12px; }
+  .panel > summary { cursor: pointer; padding: 13px 14px; font-weight: 700; list-style: none; min-height: 44px; display: flex; align-items: center; }
+  .panel > summary::-webkit-details-marker { display: none; }
+  .panel > summary::after { content: "+"; margin-left: auto; font-size: 20px; color: var(--muted); }
+  .panel[open] > summary::after { content: "–"; }
+  .panel-body { padding: 0 14px 14px; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat { background: var(--field); border: 1px solid var(--line); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .stat span { font-size: 12px; color: var(--muted); }
+  .stat b { font-size: 15px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  .stat small { font-size: 12px; font-weight: 700; }
+  .stat.wide { grid-column: 1 / -1; }
+  .pos { color: var(--success); }
+  .neg { color: var(--danger); }
+  .rates { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+  .hint { font-size: 12px; color: var(--muted); margin: 10px 0 0; line-height: 1.45; }
 
-        /* BOTTOM STICKY BAR */
-        .bottom-actions {
-            position: fixed; bottom: 0; left: 0; right: 0;
-            background: white; padding: 15px 20px;
-            display: flex; justify-content: space-around; align-items: center;
-            box-shadow: 0 -4px 15px rgba(0,0,0,0.1); z-index: 1000;
-        }
+  /* ---------- Form controls ---------- */
+  .fld { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .fld > span, .lbl { font-size: 12px; font-weight: 600; color: var(--muted); }
+  .grow { flex: 1; min-width: 0; }
+  input[type=text], input[type=number], input[type=date], input[type=search], select {
+    width: 100%; min-height: 44px; padding: 9px 11px;
+    border: 1px solid var(--line); border-radius: 10px;
+    background: var(--field); color: var(--text);
+    font-size: 16px;                      /* 16px stops iOS Safari zooming on focus */
+    outline: none;
+  }
+  input[type=text], input[type=number], input[type=date], input[type=search] { -webkit-appearance: none; appearance: none; }
+  input[type=date]::-webkit-date-and-time-value { text-align: left; }
+  input[type=number] { -moz-appearance: textfield; }
+  input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59,130,246,.28); }
 
-        .btn { border: none; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; background: none; color: #475569; }
-        .btn-main { background: var(--primary); color: white; padding: 12px 28px; border-radius: 50px; flex-direction: row; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
-        .view-link { background: var(--accent); color: white; padding: 8px; border-radius: 8px; text-align: center; font-size: 11px; font-weight: 800; cursor: pointer; margin-top: 5px; display: block; text-decoration: none; }
+  .btn-sm {
+    min-height: 44px; padding: 0 14px; border-radius: 10px;
+    border: 1px solid var(--line); background: var(--field); color: var(--text);
+    font-weight: 600; font-size: 14px; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    text-decoration: none;
+  }
+  .btn-sm.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .btn-sm.danger { color: var(--danger); }
+  .btn-sm:focus-visible, .icon-btn:focus-visible, .nav-btn:focus-visible, .attach:focus-within { outline: 2px solid var(--primary); outline-offset: 2px; }
 
-        /* Desktop Layout Styles */
-        @media (min-width: 850px) {
-            .top-dash { padding: 12px 20px; }
-            .label-text { font-size: 10px; }
-            .inr-text { font-size: 1.4rem; }
-            .gram-text { font-size: 1.4rem; }
-            .item-card { grid-template-columns: 1.2fr 2fr 0.8fr 0.8fr 1.2fr 1.2fr 1.5fr; align-items: start; }
-            .full-width { grid-column: auto; }
-        }
-    </style>
+  /* ---------- Record cards ---------- */
+  .expense-list { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); }
+  .item-card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; align-content: start;
+  }
+  .full { grid-column: 1 / -1; }
+  .card-head { display: flex; gap: 10px; align-items: flex-end; }
+  .icon-btn {
+    width: 44px; height: 44px; flex: none; border-radius: 10px;
+    border: 1px solid var(--line); background: var(--field); color: var(--danger);
+    display: grid; place-items: center; cursor: pointer;
+  }
+  .calc { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 14px; font-weight: 700; }
+  .calc:empty { display: none; }
+  .calc .net { color: var(--success); }
+  .calc .saved { color: var(--saved); }
+  .calc .note { color: var(--muted); font-weight: 500; font-size: 12px; flex-basis: 100%; }
+  .calc .warn { color: var(--warn); font-weight: 600; font-size: 12px; flex-basis: 100%; }
+  .inv-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 4px; }
+  .fname { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 80px; }
+  .empty { text-align: center; color: var(--muted); padding: 36px 16px; line-height: 1.5; }
+
+  /* ---------- Bottom bar ---------- */
+  .bottom-actions {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 1000;
+    display: flex; justify-content: space-around; align-items: center;
+    background: var(--card); border-top: 1px solid var(--line);
+    padding: 8px max(16px, env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left));
+    box-shadow: 0 -4px 15px rgba(0,0,0,.08);
+  }
+  .nav-btn {
+    border: 0; background: none; color: var(--muted); font-weight: 600; font-size: 12px; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 64px; min-height: 48px; justify-content: center; border-radius: 10px;
+  }
+  .nav-btn .ico { font-size: 20px; line-height: 1; }
+  .nav-main {
+    background: var(--primary); color: #fff; flex-direction: row; gap: 8px;
+    padding: 0 26px; min-height: 50px; border-radius: 50px; font-size: 15px;
+    box-shadow: 0 4px 12px rgba(37,99,235,.35);
+  }
+  .nav-main .ico { font-size: 22px; }
+  @media (pointer: coarse) { body.kb .bottom-actions { display: none; } }   /* keyboard open: give the fields room */
+
+  /* ---------- Sheets and toast ---------- */
+  .overlay {
+    position: fixed; inset: 0; z-index: 2000; background: rgba(2,6,23,.6);
+    display: flex; align-items: flex-end; justify-content: center;
+  }
+  .sheet {
+    width: 100%; max-width: 520px; background: var(--card); color: var(--text);
+    border-radius: 18px 18px 0 0; padding: 18px 18px calc(18px + env(safe-area-inset-bottom, 0px));
+    max-height: 88vh; max-height: 88dvh; overflow: auto; overscroll-behavior: contain;
+  }
+  .sheet.wide { max-width: 760px; }
+  .sheet h2 { margin: 0 0 8px; font-size: 18px; }
+  .sheet-body { font-size: 15px; line-height: 1.5; color: var(--text); }
+  .sheet-actions { display: grid; gap: 8px; margin-top: 14px; }
+  .viewer { display: grid; gap: 10px; justify-items: center; }
+  .viewer img { max-width: 100%; height: auto; border-radius: 8px; }
+  .viewer iframe { width: 100%; height: 60vh; border: 0; border-radius: 8px; background: #fff; }
+  .viewer .row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  @media (min-width: 640px) {
+    .overlay { align-items: center; }
+    .sheet { border-radius: 18px; }
+  }
+
+  .toast {
+    position: fixed; left: 50%; transform: translateX(-50%); z-index: 3000;
+    bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+    background: #0f172a; color: #fff; border: 1px solid rgba(255,255,255,.14);
+    padding: 10px 14px; border-radius: 12px; max-width: min(92vw, 460px);
+    display: flex; gap: 14px; align-items: center; font-size: 14px; box-shadow: 0 8px 24px rgba(0,0,0,.35);
+  }
+  .toast button { background: none; border: 0; color: #fbbf24; font-weight: 700; cursor: pointer; min-height: 32px; padding: 0 4px; }
+
+  @media (min-width: 900px) {
+    .m-grams { font-size: 1.7rem; }
+    .item-card { padding: 16px; }
+  }
+</style>
 </head>
 <body>
 
-<div class="top-dash">
-    <div class="total-box left-align">
-        <div>
-            <span class="label-text">TOTAL GOLD</span>
-            <span class="gram-text" id="totalGold" style="color: var(--accent);">0g</span>
-        </div>
-        <div class="dash-divider">
-            <span class="label-text">TOTAL SILVER</span>
-            <span class="gram-text" id="totalSilver" style="color: #cbd5e1;">0g</span>
-        </div>
+<header class="top-dash">
+  <div class="metal m-gold">
+    <span class="m-name">Gold</span>
+    <span class="m-grams" id="totalGold">0 g</span>
+    <span class="m-cost"><small>Net cost</small><b id="goldINR">₹0.00</b></span>
+  </div>
+  <div class="metal m-silver">
+    <span class="m-name">Silver</span>
+    <span class="m-grams" id="totalSilver">0 g</span>
+    <span class="m-cost"><small>Net cost</small><b id="silverINR">₹0.00</b></span>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="filter-row">
+    <label class="fld">
+      <span>Year</span>
+      <select id="yearFilter"></select>
+    </label>
+    <label class="fld grow">
+      <span>Search description</span>
+      <input type="search" id="search" placeholder="Chain, coin, bar…" autocomplete="off" enterkeyhint="search">
+    </label>
+  </div>
+  <div class="count" id="countLine"></div>
+
+  <div class="banner" id="backupBanner" hidden>
+    <span>Your records are stored only in this browser. Back them up so nothing gets lost.</span>
+    <button type="button" class="btn-sm primary" id="bannerBackup">Back up</button>
+  </div>
+
+  <details class="panel" id="insights">
+    <summary>Insights and rates</summary>
+    <div class="panel-body">
+      <div class="stats">
+        <div class="stat"><span>Total spent</span><b id="stSpent">₹0.00</b></div>
+        <div class="stat"><span>Saved through discounts</span><b id="stSaved">₹0.00</b></div>
+        <div class="stat"><span>Average gold cost</span><b id="stGoldAvg">–</b></div>
+        <div class="stat"><span>Average silver cost</span><b id="stSilverAvg">–</b></div>
+        <div class="stat" id="stOtherWrap" hidden><span>Records without grams</span><b id="stOther">₹0.00</b></div>
+        <div class="stat wide" id="stValueWrap" hidden><span>Estimated value at your rates</span><b id="stValue">₹0.00</b><small id="stGain"></small></div>
+      </div>
+      <div class="rates">
+        <label class="fld"><span>Gold rate today (₹/g)</span><input type="number" id="goldRate" inputmode="decimal" step="any" min="0" placeholder="0"></label>
+        <label class="fld"><span>Silver rate today (₹/g)</span><input type="number" id="silverRate" inputmode="decimal" step="any" min="0" placeholder="0"></label>
+      </div>
+      <p class="hint">Rates are optional and stay on this device. They give an estimated value for what you hold and split the cost of purchases that include both gold and silver.</p>
+      <p class="hint" id="lastBackup"></p>
     </div>
-    
-    <div class="total-box right-align">
-        <div>
-            <span class="label-text">GOLD NET COST</span>
-            <span class="inr-text" id="goldINR">₹0.00</span>
-        </div>
-        <div class="dash-divider">
-            <span class="label-text">SILVER NET COST</span>
-            <span class="inr-text" id="silverINR">₹0.00</span>
-        </div>
-    </div>
-</div>
+  </details>
 
-<div class="container">
-    <div class="filter-row">
-        <div>
-            <label class="label-text" style="color:#64748b">Filter Year</label>
-            <select id="yearFilter" onchange="refresh()"></select>
-        </div>
-    </div>
+  <div id="expenseList" class="expense-list"></div>
+  <div class="empty" id="emptyState" hidden></div>
+</main>
 
-    <div id="expenseList" class="expense-list"></div>
-</div>
+<nav class="bottom-actions" aria-label="Actions">
+  <button type="button" class="nav-btn" id="btnImport"><span class="ico" aria-hidden="true">📥</span><span>Import</span></button>
+  <button type="button" class="nav-btn nav-main" id="btnAdd"><span class="ico" aria-hidden="true">＋</span><span>Add record</span></button>
+  <button type="button" class="nav-btn" id="btnExport"><span class="ico" aria-hidden="true">📤</span><span>Export</span></button>
+</nav>
 
-<div class="bottom-actions">
-    <button class="btn" onclick="document.getElementById('importFile').click()">
-        <span>📥</span><span>Import</span>
-    </button>
-    <button class="btn btn-main" onclick="addNew()">
-        <span>＋</span><span>Add Record</span>
-    </button>
-    <button class="btn" onclick="exportData()">
-        <span>📤</span><span>Export</span>
-    </button>
-</div>
-
-<input type="file" id="importFile" hidden accept=".json" onchange="importData(event)">
+<input type="file" id="importFile" class="vh" accept=".json,application/json" tabindex="-1">
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
 <script>
-    const DB_KEY = "Tracker_Final_AllFields_V19";
+(() => {
+'use strict';
 
-    // Setup Year Filter
-    const yf = document.getElementById('yearFilter');
-    const cy = new Date().getFullYear();
-    for(let i=cy-5; i<=cy+5; i++) {
-        let o = document.createElement('option'); o.value = i; o.innerText = i;
-        if(i === cy) o.selected = true;
-        yf.appendChild(o);
+/* =====================================================================
+   Constants
+   ===================================================================== */
+const DB_KEY   = 'Tracker_Final_AllFields_V19';   // same key as before, so existing data still loads
+const PREF_KEY = 'GoldSilverTracker_prefs_v2';
+const IDB_NAME = 'GoldSilverTracker_files';
+const MAX_FILE_BYTES = 20 * 1024 * 1024;          // per invoice
+const INLINE_MAX     = 1.5 * 1024 * 1024;         // only used if IndexedDB is unavailable
+const FALLBACK_RATIO = 80;                        // gold:silver per-gram price ratio used when no rates are set
+const NUM_FIELDS = ['gold', 'silver', 'goldPart', 'price', 'disc'];
+
+const $ = (sel, root = document) => root.querySelector(sel);
+
+/* =====================================================================
+   Helpers
+   ===================================================================== */
+const uid = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
+  : Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+const str = v => (v == null ? '' : String(v));
+const num = v => { const n = parseFloat(v); return Number.isFinite(n) && n > 0 ? n : 0; };
+const inr = n => '₹' + n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const grams = n => n.toLocaleString('en-IN', { maximumFractionDigits: 3 }) + ' g';
+const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+function today() {
+  const d = new Date(), p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+const readAs = (blob, method) => new Promise((res, rej) => {
+  const fr = new FileReader();
+  fr.onload = () => res(fr.result);
+  fr.onerror = () => rej(fr.error);
+  fr[method](blob);
+});
+const blobToBuf = b => readAs(b, 'readAsArrayBuffer');
+const blobToDataURL = b => readAs(b, 'readAsDataURL');
+function dataURLToBlob(u) {
+  const i = u.indexOf(',');
+  const meta = u.slice(5, i);
+  const type = meta.split(';')[0] || 'application/octet-stream';
+  const bin = /;base64$/i.test(meta) ? atob(u.slice(i + 1)) : decodeURIComponent(u.slice(i + 1));
+  const arr = new Uint8Array(bin.length);
+  for (let k = 0; k < bin.length; k++) arr[k] = bin.charCodeAt(k);
+  return new Blob([arr], { type });
+}
+const extFor = t => ({ 'application/pdf': '.pdf', 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp' }[t] || '');
+
+/* =====================================================================
+   Storage: records + preferences in localStorage, invoices in IndexedDB
+   ===================================================================== */
+let lsOK = true;
+const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { lsOK = false; return null; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } };
+
+let prefs = { year: 'all', goldRate: '', silverRate: '', lastBackup: 0 };
+function loadPrefs() { try { Object.assign(prefs, JSON.parse(lsGet(PREF_KEY) || '{}')); } catch (e) {} }
+function savePrefs() { lsSet(PREF_KEY, JSON.stringify(prefs)); }
+
+let records = [];
+let search = '';
+let loadFailed = false;
+let idb = null;
+
+function normalize(r) {
+  r = r || {};
+  const d = str(r.date);
+  return {
+    id: str(r.id) || uid(),
+    created: Number(r.created) || Date.now(),
+    date: /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : '',
+    item: str(r.item),
+    gold: str(r.gold), silver: str(r.silver), goldPart: str(r.goldPart),
+    price: str(r.price), disc: str(r.disc),
+    fileId: str(r.fileId), fileName: str(r.fileName), fileType: str(r.fileType),
+    file: typeof r.file === 'string' ? r.file : ''           // legacy inline data-URL
+  };
+}
+const notEmpty = r => !!(r.item || r.gold || r.silver || r.goldPart || r.price || r.disc || r.fileId || r.file);
+const byId = id => records.find(r => r.id === id);
+const sig = r => [r.date, r.item, r.gold, r.silver, r.price, r.disc].join('|');
+
+function loadRecords() {
+  const raw = lsGet(DB_KEY);
+  if (!raw) return [];
+  try {
+    let data = JSON.parse(raw);
+    if (data && !Array.isArray(data) && Array.isArray(data.records)) data = data.records;
+    if (!Array.isArray(data)) throw new Error('unexpected shape');
+    return data.filter(x => x && typeof x === 'object').map((x, i) => normalize({ ...x, created: x.created || i + 1 }));
+  } catch (e) {
+    loadFailed = true;
+    lsSet(DB_KEY + '_unreadable_' + Date.now(), raw);          // keep a copy instead of silently wiping it
+    return [];
+  }
+}
+
+let saveTimer = null, lastSaveWarn = 0;
+function persistSoon() { clearTimeout(saveTimer); saveTimer = setTimeout(persistNow, 400); }
+function persistNow() {
+  clearTimeout(saveTimer); saveTimer = null;
+  const ok = lsSet(DB_KEY, JSON.stringify(records.filter(notEmpty)));
+  if (!ok && Date.now() - lastSaveWarn > 10000) {
+    lastSaveWarn = Date.now();
+    toast('Could not save. Storage may be full, so export a backup now.', { duration: 7000 });
+  }
+  updateBackupNote();
+}
+// Mobile browsers can suspend the page at any moment, so flush pending edits right away.
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && saveTimer) persistNow(); });
+window.addEventListener('pagehide', () => { if (saveTimer) persistNow(); });
+
+/* ---- IndexedDB (invoice files) ---- */
+function openIDB() {
+  const open = new Promise(res => {
+    try {
+      const rq = indexedDB.open(IDB_NAME, 1);
+      rq.onupgradeneeded = () => rq.result.createObjectStore('files', { keyPath: 'id' });
+      rq.onsuccess = () => res(rq.result);
+      rq.onerror = rq.onblocked = () => res(null);
+    } catch (e) { res(null); }
+  });
+  return Promise.race([open, new Promise(res => setTimeout(() => res(null), 3000))]);
+}
+function idbReq(mode, fn) {
+  return new Promise((res, rej) => {
+    const tx = idb.transaction('files', mode);
+    const rq = fn(tx.objectStore('files'));
+    tx.oncomplete = () => res(rq && rq.result);
+    tx.onerror = tx.onabort = () => rej(tx.error);
+  });
+}
+const idbPut  = row => idbReq('readwrite', s => s.put(row));
+const idbGet  = id  => idbReq('readonly',  s => s.get(id));
+const idbDel  = id  => idbReq('readwrite', s => s.delete(id));
+const idbKeys = ()  => idbReq('readonly',  s => s.getAllKeys());
+
+async function getBlob(r) {
+  if (r.fileId && idb) {
+    const row = await idbGet(r.fileId);
+    if (row) return new Blob([row.data], { type: row.type });
+  }
+  if (r.file) return dataURLToBlob(r.file);
+  return null;
+}
+
+// Move old inline base64 invoices (which fill up localStorage) into IndexedDB.
+async function migrateInline(list) {
+  if (!idb) return 0;
+  let n = 0;
+  for (const r of list) {
+    if (r.file && r.file.startsWith('data:')) {
+      try {
+        const b = dataURLToBlob(r.file);
+        const id = uid();
+        const name = r.fileName || ('Invoice' + extFor(b.type));
+        await idbPut({ id, name, type: b.type, data: await blobToBuf(b) });
+        r.fileId = id; r.fileType = b.type; r.fileName = name; r.file = '';
+        n++;
+      } catch (e) { /* leave it inline */ }
     }
+  }
+  return n;
+}
 
-    function init() {
-        const saved = JSON.parse(localStorage.getItem(DB_KEY)) || [];
-        document.getElementById('expenseList').innerHTML = "";
-        if(saved.length === 0) addNew();
-        else saved.forEach(s => addNew(s));
-        refresh();
+// Remove invoice files that no record points to any more.
+async function gcFiles() {
+  if (!idb || !lsOK || loadFailed) return;
+  try {
+    const used = new Set(records.map(r => r.fileId).filter(Boolean));
+    if (pending && pending.fileId) used.add(pending.fileId);
+    for (const k of await idbKeys()) if (!used.has(k)) await idbDel(k);
+  } catch (e) {}
+}
+
+/* =====================================================================
+   Calculations
+   ===================================================================== */
+function calc(r) {
+  const g = num(r.gold), s = num(r.silver), price = num(r.price);
+  const d = Math.min(100, num(r.disc));
+  const disc = price * d / 100, net = price - disc;
+  let gold = 0, silver = 0, other = 0, estimated = false;
+  if (price > 0) {
+    if (g > 0 && s === 0) gold = net;
+    else if (s > 0 && g === 0) silver = net;
+    else if (g > 0 && s > 0) {
+      const gp = Math.min(num(r.goldPart), price);
+      if (gp > 0) {                                   // exact split entered by the user
+        gold = gp * (1 - d / 100);
+        silver = net - gold;
+      } else {                                        // estimate: today's rates if set, else fixed ratio
+        const gr = num(prefs.goldRate), sr = num(prefs.silverRate);
+        const gv = gr > 0 && sr > 0 ? g * gr : g * FALLBACK_RATIO;
+        const sv = gr > 0 && sr > 0 ? s * sr : s;
+        gold = net * gv / (gv + sv);
+        silver = net - gold;
+        estimated = true;
+      }
+    } else other = net;                               // price but no grams: don't guess it is gold
+  }
+  return { g, s, price, d, disc, net, gold, silver, other, estimated };
+}
+
+/* =====================================================================
+   Rendering
+   ===================================================================== */
+const listEl = $('#expenseList');
+const yearEl = $('#yearFilter');
+
+const CARD_HTML = `
+  <div class="card-head full">
+    <label class="fld grow"><span>Date</span><input type="date" data-f="date"></label>
+    <button type="button" class="icon-btn" data-act="delete" aria-label="Delete this record" title="Delete">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6"/></svg>
+    </button>
+  </div>
+  <label class="fld full"><span>Description</span><input type="text" data-f="item" placeholder="e.g. 22K chain, 10 g coin" autocomplete="off" enterkeyhint="next"></label>
+  <label class="fld"><span>Gold (g)</span><input type="number" data-f="gold" inputmode="decimal" step="any" min="0" placeholder="0"></label>
+  <label class="fld"><span>Silver (g)</span><input type="number" data-f="silver" inputmode="decimal" step="any" min="0" placeholder="0"></label>
+  <label class="fld"><span>Actual price (₹)</span><input type="number" data-f="price" inputmode="decimal" step="any" min="0" placeholder="0.00"></label>
+  <label class="fld"><span>Discount %</span><input type="number" data-f="disc" inputmode="decimal" step="any" min="0" max="100" placeholder="0"></label>
+  <label class="fld full split" hidden><span>Gold portion of the price (₹), optional</span><input type="number" data-f="goldPart" inputmode="decimal" step="any" min="0" placeholder="Leave empty to estimate"></label>
+  <div class="calc full" aria-live="polite"></div>
+  <div class="full">
+    <span class="lbl">Invoice</span>
+    <div class="inv-row">
+      <label class="btn-sm attach"><span aria-hidden="true">📎</span><span class="attach-text">Attach</span><input type="file" data-f="file" accept="image/*,application/pdf" class="vh"></label>
+      <button type="button" class="btn-sm" data-act="view" hidden>View</button>
+      <button type="button" class="btn-sm danger" data-act="rmfile" hidden>Remove</button>
+      <span class="fname"></span>
+    </div>
+  </div>`;
+
+function cardEl(r) {
+  const el = document.createElement('article');
+  el.className = 'item-card';
+  el.dataset.id = r.id;
+  el.innerHTML = CARD_HTML;                        // static markup only; user data is set below via .value / .textContent
+  el.querySelectorAll('input[data-f]').forEach(inp => {
+    const f = inp.dataset.f;
+    if (f !== 'file') inp.value = r[f] || '';
+  });
+  updateCard(el, r);
+  updateInvoiceUI(el, r);
+  return el;
+}
+
+function updateCard(card, r) {
+  const c = calc(r);
+  $('.split', card).hidden = !(c.g > 0 && c.s > 0);
+  const box = $('.calc', card);
+  box.textContent = '';
+  const add = (cls, txt) => { const sp = document.createElement('span'); sp.className = cls; sp.textContent = txt; box.appendChild(sp); };
+  if (c.price > 0) {
+    add('net', 'Net: ' + inr(c.net));
+    if (c.d > 0) add('saved', 'Saved: ' + inr(c.disc));
+    if (c.net > 0 && c.g > 0 && c.s === 0) add('note', 'About ' + inr(c.net / c.g) + ' per gram of gold');
+    else if (c.net > 0 && c.s > 0 && c.g === 0) add('note', 'About ' + inr(c.net / c.s) + ' per gram of silver');
+    if (c.estimated) add('note', 'Gold and silver cost is estimated. Enter the gold portion for an exact split.');
+    if (c.g === 0 && c.s === 0) add('warn', 'Add the grams so this counts towards your gold or silver totals.');
+  }
+}
+
+function updateInvoiceUI(card, r) {
+  const has = !!(r.fileId || r.file);
+  $('[data-act=view]', card).hidden = !has;
+  $('[data-act=rmfile]', card).hidden = !has;
+  $('.attach-text', card).textContent = has ? 'Replace' : 'Attach';
+  $('.fname', card).textContent = has ? (r.fileName || 'Invoice') : 'No file attached';
+}
+
+function visible() {
+  const q = search.trim().toLowerCase();
+  return records.filter(r => {
+    if (prefs.year !== 'all' && r.date && !r.date.startsWith(prefs.year)) return false;   // undated records always stay visible
+    if (q && !r.item.toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+function cmp(a, b) {                                // newest first, undated (new) records on top
+  if (a.date !== b.date) {
+    if (!a.date) return -1;
+    if (!b.date) return 1;
+    return a.date < b.date ? 1 : -1;
+  }
+  return b.created - a.created;
+}
+
+function buildYearOptions() {
+  const years = new Set([String(new Date().getFullYear())]);
+  records.forEach(r => { if (r.date) years.add(r.date.slice(0, 4)); });
+  if (prefs.year !== 'all') years.add(String(prefs.year));
+  yearEl.textContent = '';
+  const mk = (v, t) => { const o = document.createElement('option'); o.value = v; o.textContent = t; yearEl.appendChild(o); };
+  mk('all', 'All years');
+  [...years].sort().reverse().forEach(y => mk(y, y));
+  yearEl.value = String(prefs.year);
+}
+
+function render() {
+  buildYearOptions();
+  const list = visible().sort(cmp);
+  listEl.textContent = '';
+  const frag = document.createDocumentFragment();
+  list.forEach(r => frag.appendChild(cardEl(r)));
+  listEl.appendChild(frag);
+  const empty = $('#emptyState');
+  empty.hidden = list.length > 0;
+  empty.textContent = records.length === 0
+    ? 'No records yet. Tap “Add record” to log your first purchase.'
+    : 'No records match this year or search.';
+  recalcTotals();
+}
+
+function recalcTotals() {
+  const list = visible();
+  let tg = 0, ts = 0, gi = 0, si = 0, oi = 0, saved = 0;
+  list.forEach(r => { const c = calc(r); tg += c.g; ts += c.s; gi += c.gold; si += c.silver; oi += c.other; saved += c.disc; });
+
+  $('#totalGold').textContent = grams(tg);
+  $('#totalSilver').textContent = grams(ts);
+  $('#goldINR').textContent = inr(gi);
+  $('#silverINR').textContent = inr(si);
+
+  $('#stSpent').textContent = inr(gi + si + oi);
+  $('#stSaved').textContent = inr(saved);
+  $('#stGoldAvg').textContent = tg > 0 ? inr(gi / tg) + '/g' : '–';
+  $('#stSilverAvg').textContent = ts > 0 ? inr(si / ts) + '/g' : '–';
+  $('#stOtherWrap').hidden = !(oi > 0);
+  $('#stOther').textContent = inr(oi);
+
+  const gr = num(prefs.goldRate), sr = num(prefs.silverRate);
+  const wrap = $('#stValueWrap');
+  wrap.hidden = !(gr > 0 || sr > 0);
+  if (!wrap.hidden) {
+    const value = (gr > 0 ? tg * gr : 0) + (sr > 0 ? ts * sr : 0);
+    const cost = (gr > 0 ? gi : 0) + (sr > 0 ? si : 0);
+    const gain = value - cost;
+    $('#stValue').textContent = inr(value);
+    const gEl = $('#stGain');
+    gEl.className = gain >= 0 ? 'pos' : 'neg';
+    gEl.textContent = (gain >= 0 ? 'Up ' : 'Down ') + inr(Math.abs(gain)) + (cost > 0 ? ` (${(Math.abs(gain) / cost * 100).toFixed(1)}%) against what you paid` : '');
+  }
+
+  $('#countLine').textContent = list.length === records.length
+    ? plural(records.length, 'record')
+    : `${list.length} of ${plural(records.length, 'record')} shown`;
+  updateBackupNote();
+}
+
+function updateBackupNote() {
+  const n = records.filter(notEmpty).length;
+  const days = prefs.lastBackup ? (Date.now() - prefs.lastBackup) / 864e5 : Infinity;
+  $('#backupBanner').hidden = !(n >= 3 && days > 30);
+  $('#lastBackup').textContent = prefs.lastBackup
+    ? 'Last backup: ' + new Date(prefs.lastBackup).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+    : 'No backup made yet.';
+}
+
+/* =====================================================================
+   Toast and sheets
+   ===================================================================== */
+let toastTimer = null, expireCb = null;
+function hideToast() { clearTimeout(toastTimer); $('#toast').hidden = true; }
+function toast(msg, { action, onAction, onExpire, duration = 3200, sticky = false } = {}) {
+  clearTimeout(toastTimer);
+  if (expireCb) { const cb = expireCb; expireCb = null; cb(); }
+  const el = $('#toast');
+  el.textContent = '';
+  const sp = document.createElement('span'); sp.textContent = msg; el.appendChild(sp);
+  if (action) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = action;
+    b.onclick = () => { expireCb = null; hideToast(); if (onAction) onAction(); };
+    el.appendChild(b);
+  }
+  el.hidden = false;
+  expireCb = onExpire || null;
+  if (!sticky) toastTimer = setTimeout(() => { hideToast(); if (expireCb) { const cb = expireCb; expireCb = null; cb(); } }, duration);
+}
+
+let modalEl = null, modalOnClose = null;
+function modal({ title, body, actions = [], onClose, wide }) {
+  closeModal();
+  const ov = document.createElement('div');
+  ov.className = 'overlay';
+  ov.setAttribute('role', 'dialog');
+  ov.setAttribute('aria-modal', 'true');
+  ov.setAttribute('aria-label', title);
+  const sheet = document.createElement('div');
+  sheet.className = 'sheet' + (wide ? ' wide' : '');
+  const h = document.createElement('h2'); h.textContent = title; sheet.appendChild(h);
+  const b = document.createElement('div'); b.className = 'sheet-body';
+  if (typeof body === 'string') b.textContent = body; else if (body) b.appendChild(body);
+  sheet.appendChild(b);
+  if (actions.length) {
+    const ac = document.createElement('div'); ac.className = 'sheet-actions';
+    actions.forEach(a => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn-sm' + (a.primary ? ' primary' : '') + (a.danger ? ' danger' : '');
+      btn.textContent = a.label;
+      btn.onclick = () => {
+        const mine = modalEl;
+        const keep = a.onClick && a.onClick();
+        if (keep !== true && modalEl === mine) closeModal();   // skip if the handler opened a new sheet
+      };
+      ac.appendChild(btn);
+    });
+    sheet.appendChild(ac);
+  }
+  ov.appendChild(sheet);
+  ov.addEventListener('click', e => { if (e.target === ov) closeModal(); });
+  document.body.appendChild(ov);
+  document.body.classList.add('modal-open');
+  modalEl = ov; modalOnClose = onClose || null;
+}
+function closeModal() {
+  if (!modalEl) return;
+  modalEl.remove(); modalEl = null;
+  document.body.classList.remove('modal-open');
+  const cb = modalOnClose; modalOnClose = null;
+  if (cb) cb();
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+/* =====================================================================
+   Record actions
+   ===================================================================== */
+let pending = null;                                 // record awaiting final deletion (undo window)
+function finalizePending() {
+  if (!pending) return;
+  const r = pending; pending = null;
+  if (r.fileId && idb && !records.some(x => x.fileId === r.fileId)) idbDel(r.fileId).catch(() => {});
+}
+
+function addRecord() {
+  closeModal();
+  const r = normalize({ date: today() });
+  records.push(r);
+  const y = r.date.slice(0, 4);
+  if (prefs.year !== 'all' && prefs.year !== y) { prefs.year = y; savePrefs(); }
+  search = ''; $('#search').value = '';
+  render();
+  const card = listEl.querySelector(`[data-id="${r.id}"]`);
+  if (card) {
+    card.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    const d = $('[data-f=item]', card); if (d) d.focus({ preventScroll: true });
+  }
+}
+
+function deleteRecord(r) {
+  finalizePending();
+  records = records.filter(x => x !== r);
+  if (!notEmpty(r)) { render(); return; }
+  pending = r;
+  persistNow();
+  render();
+  toast('Record deleted.', {
+    action: 'Undo', duration: 6000,
+    onAction: () => { if (pending === r) { pending = null; records.push(r); persistNow(); render(); } },
+    onExpire: finalizePending
+  });
+}
+
+function removeFile(card, r) {
+  modal({
+    title: 'Remove invoice?', body: 'The attached file will be deleted from this record.',
+    actions: [
+      { label: 'Remove invoice', danger: true, onClick: () => {
+          const old = r.fileId;
+          r.fileId = ''; r.file = ''; r.fileName = ''; r.fileType = '';
+          updateInvoiceUI(card, r); persistNow();
+          if (old && idb) idbDel(old).catch(() => {});
+      } },
+      { label: 'Keep it' }
+    ]
+  });
+}
+
+function compressImage(file, maxDim = 1800, quality = 0.82) {
+  return new Promise(res => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const w = img.naturalWidth, h = img.naturalHeight, scale = Math.min(1, maxDim / Math.max(w, h));
+      if (scale === 1 && file.size < 800 * 1024) { res(file); return; }
+      const c = document.createElement('canvas');
+      c.width = Math.round(w * scale); c.height = Math.round(h * scale);
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+      ctx.drawImage(img, 0, 0, c.width, c.height);
+      c.toBlob(b => res(b && b.size < file.size ? b : file), 'image/jpeg', quality);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); res(file); };
+    img.src = url;
+  });
+}
+
+async function attachFile(card, r, file, input) {
+  if (!file) return;
+  if (file.size > MAX_FILE_BYTES) { toast('That file is over 20 MB. Choose a smaller one.'); input.value = ''; return; }
+  toast('Saving invoice…', { sticky: true });
+  try {
+    let blob = file, type = file.type || (/\.pdf$/i.test(file.name) ? 'application/pdf' : ''), name = file.name || 'Invoice';
+    if (/^image\//.test(type) && !/gif|svg/.test(type)) {
+      blob = await compressImage(file);
+      if (blob !== file) { type = blob.type || 'image/jpeg'; name = name.replace(/\.[^.]+$/, '') + '.jpg'; }
     }
-
-    function addNew(data = {}) {
-        const div = document.createElement('div');
-        div.className = "item-card";
-        div.innerHTML = `
-            <div>
-                <label>Date</label>
-                <input type="date" class="d-date" value="${data.date || ''}" onchange="refresh(); save();">
-            </div>
-            <div class="full-width">
-                <label>Description</label>
-                <input type="text" class="d-item" value="${data.item || ''}" placeholder="Item details..." oninput="save();">
-            </div>
-            <div>
-                <label>Gold (g)</label>
-                <input type="number" class="d-gold" value="${data.gold || ''}" placeholder="0" oninput="refresh(); save();">
-            </div>
-            <div>
-                <label>Silver (g)</label>
-                <input type="number" class="d-silver" value="${data.silver || ''}" placeholder="0" oninput="refresh(); save();">
-            </div>
-            <div>
-                <label>Actual Price (₹)</label>
-                <input type="number" class="d-price" value="${data.price || ''}" placeholder="0.00" oninput="refresh(); save();">
-            </div>
-            <div>
-                <label>Disc %</label>
-                <input type="number" class="d-disc" value="${data.disc || ''}" placeholder="0" oninput="refresh(); save();">
-                <div class="calc-display">
-                    <span class="net-val"></span>
-                    <span class="diff-val"></span>
-                </div>
-            </div>
-            <div>
-                <label>Invoice</label>
-                <input type="file" onchange="upFile(this)" style="font-size: 10px; width:100%;">
-                <input type="hidden" class="d-file" value="${data.file || ''}">
-                <div class="btn-zone">${data.file ? `<div class="view-link" onclick="showInv('${data.file}')">View File</div>` : ''}</div>
-            </div>
-        `;
-        document.getElementById('expenseList').appendChild(div);
+    const old = r.fileId;
+    if (idb) {
+      const id = uid();
+      await idbPut({ id, name, type, data: await blobToBuf(blob) });
+      r.fileId = id; r.file = '';
+      if (old) idbDel(old).catch(() => {});
+    } else {
+      if (blob.size > INLINE_MAX) throw new Error('too big for fallback storage');
+      r.file = await blobToDataURL(blob); r.fileId = '';
     }
+    r.fileName = name; r.fileType = type;
+    updateInvoiceUI(card, r);
+    persistNow();
+    toast('Invoice saved.');
+  } catch (e) {
+    toast('Could not save that invoice. Try a smaller file.', { duration: 5000 });
+  } finally {
+    input.value = '';
+  }
+}
 
-    function upFile(el) {
-        const r = new FileReader();
-        r.onload = (e) => {
-            const base64 = e.target.result;
-            el.parentElement.querySelector('.d-file').value = base64;
-            el.parentElement.querySelector('.btn-zone').innerHTML = `<div class="view-link" onclick="showInv('${base64}')">View File</div>`;
-            save();
-        };
-        if(el.files[0]) r.readAsDataURL(el.files[0]);
+async function openInvoice(r) {
+  let blob = null;
+  try { blob = await getBlob(r); } catch (e) {}
+  if (!blob) { toast('Invoice file not found.'); return; }
+  const url = URL.createObjectURL(blob);
+  const name = r.fileName || ('invoice' + extFor(blob.type));
+  const body = document.createElement('div'); body.className = 'viewer';
+  if ((blob.type || '').startsWith('image/')) {
+    const img = document.createElement('img'); img.src = url; img.alt = 'Invoice image'; body.appendChild(img);
+  } else if (navigator.pdfViewerEnabled && matchMedia('(pointer: fine)').matches) {
+    const f = document.createElement('iframe'); f.src = url; f.title = 'Invoice PDF'; body.appendChild(f);
+  } else {
+    const p = document.createElement('p'); p.textContent = 'A preview is not available for this file on this device. Open or download it below.'; body.appendChild(p);
+  }
+  const row = document.createElement('div'); row.className = 'row';
+  const open = document.createElement('a'); open.className = 'btn-sm'; open.href = url; open.target = '_blank'; open.rel = 'noopener'; open.textContent = 'Open in new tab';
+  const dl = document.createElement('a'); dl.className = 'btn-sm'; dl.href = url; dl.download = name; dl.textContent = 'Download';
+  row.append(open, dl); body.appendChild(row);
+  modal({
+    title: name, body, wide: true,
+    actions: [{ label: 'Close' }],
+    onClose: () => setTimeout(() => URL.revokeObjectURL(url), 60000)
+  });
+}
+
+/* =====================================================================
+   Card events (delegated)
+   ===================================================================== */
+let dateDirty = null;
+
+listEl.addEventListener('input', e => {
+  const t = e.target, f = t.dataset && t.dataset.f;
+  if (!f || f === 'file' || f === 'date') return;
+  const card = t.closest('.item-card'), r = card && byId(card.dataset.id);
+  if (!r) return;
+  r[f] = t.value;
+  updateCard(card, r);
+  recalcTotals();
+  persistSoon();
+});
+
+listEl.addEventListener('change', e => {
+  const t = e.target, f = t.dataset && t.dataset.f;
+  if (!f) return;
+  const card = t.closest('.item-card'), r = card && byId(card.dataset.id);
+  if (!r) return;
+  if (f === 'file') { attachFile(card, r, t.files[0], t); return; }
+  if (f === 'date') { r.date = t.value; dateDirty = r.id; persistSoon(); return; }
+  if (NUM_FIELDS.includes(f) && t.value !== '') {                 // tidy up negatives and >100% on blur
+    let n = parseFloat(t.value);
+    if (!Number.isFinite(n) || n < 0) n = 0;
+    if (f === 'disc' && n > 100) n = 100;
+    t.value = String(n);
+    r[f] = t.value;
+    updateCard(card, r); recalcTotals(); persistSoon();
+  }
+});
+
+// Re-sort only after the date field loses focus, so the native date picker is never interrupted.
+listEl.addEventListener('focusout', e => {
+  const t = e.target;
+  if (!(t.dataset && t.dataset.f === 'date')) return;
+  const card = t.closest('.item-card');
+  if (!card || dateDirty !== card.dataset.id) return;
+  const r = byId(dateDirty); dateDirty = null;
+  if (!r) return;
+  const y = r.date.slice(0, 4);
+  if (r.date && prefs.year !== 'all' && prefs.year !== y) {
+    prefs.year = y; savePrefs();
+    toast(`Showing ${y} so this record stays visible.`);
+  }
+  render();
+  const el = listEl.querySelector(`[data-id="${r.id}"]`);
+  if (el) el.scrollIntoView({ block: 'center' });
+});
+
+listEl.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]');
+  if (!b) return;
+  const card = b.closest('.item-card'), r = card && byId(card.dataset.id);
+  if (!r) return;
+  if (b.dataset.act === 'delete') deleteRecord(r);
+  else if (b.dataset.act === 'view') openInvoice(r);
+  else if (b.dataset.act === 'rmfile') removeFile(card, r);
+});
+
+listEl.addEventListener('keydown', e => {             // Enter moves to the next field
+  if (e.key !== 'Enter' || !e.target.matches('input[data-f]:not([data-f=file])')) return;
+  e.preventDefault();
+  const all = [...e.target.closest('.item-card').querySelectorAll('input[data-f]:not([data-f=file])')].filter(i => !i.closest('[hidden]'));
+  const nxt = all[all.indexOf(e.target) + 1];
+  if (nxt) nxt.focus(); else e.target.blur();
+});
+
+// Hide the bottom bar while typing on touch devices so the keyboard doesn't push it over the fields.
+let kbTimer = null;
+document.addEventListener('focusin', e => {
+  if (e.target.matches && e.target.matches('input:not([type=file]), select')) { clearTimeout(kbTimer); document.body.classList.add('kb'); }
+});
+document.addEventListener('focusout', () => { clearTimeout(kbTimer); kbTimer = setTimeout(() => document.body.classList.remove('kb'), 150); });
+
+/* =====================================================================
+   Filters, rates
+   ===================================================================== */
+yearEl.addEventListener('change', () => { prefs.year = yearEl.value; savePrefs(); render(); });
+
+let searchTimer = null;
+$('#search').addEventListener('input', e => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => { search = e.target.value; render(); }, 150);
+});
+
+['goldRate', 'silverRate'].forEach(id => {
+  $('#' + id).addEventListener('input', e => {
+    prefs[id] = e.target.value; savePrefs();
+    document.querySelectorAll('.item-card').forEach(c => { const r = byId(c.dataset.id); if (r) updateCard(c, r); });
+    recalcTotals();
+  });
+});
+
+/* =====================================================================
+   Export / import
+   ===================================================================== */
+function download(blob, name) {
+  const url = URL.createObjectURL(blob), a = document.createElement('a');
+  a.href = url; a.download = name; a.rel = 'noopener';
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 4000);
+}
+
+async function deliver(blob, name) {                 // must be called straight from a tap so the share sheet is allowed
+  try {
+    if (navigator.canShare && navigator.share) {
+      const f = new File([blob], name, { type: blob.type });
+      if (navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: name }); return true; }
     }
+  } catch (e) { if (e && e.name === 'AbortError') return false; }
+  download(blob, name);
+  return true;
+}
 
-    function showInv(src) {
-        const w = window.open();
-        w.document.write(`<iframe src="${src}" frameborder="0" style="width:100%; height:100%; border:none;"></iframe>`);
+// Desktop: download immediately. Phones: show a ready sheet so the final Save/Share is a fresh tap
+// (iOS and Android drop the permission to share after a long async build).
+function handOff(blob, name) {
+  if (!matchMedia('(pointer: coarse)').matches) { download(blob, name); return Promise.resolve(true); }
+  return new Promise(resolve => {
+    let saving = false;
+    modal({
+      title: 'Ready to save',
+      body: `${name} (${Math.max(1, Math.round(blob.size / 1024))} KB)`,
+      actions: [
+        { label: 'Save or share', primary: true, onClick: () => { saving = true; deliver(blob, name).then(resolve); } },
+        { label: 'Cancel' }
+      ],
+      onClose: () => { if (!saving) resolve(false); }
+    });
+  });
+}
+
+async function buildBackup() {
+  const out = [];
+  for (const r of records.filter(notEmpty)) {
+    const o = { id: r.id, created: r.created, date: r.date, item: r.item, gold: r.gold, silver: r.silver,
+                goldPart: r.goldPart, price: r.price, disc: r.disc, file: '', fileName: r.fileName, fileType: r.fileType };
+    try { const b = await getBlob(r); if (b) o.file = await blobToDataURL(b); } catch (e) {}
+    out.push(o);
+  }
+  const payload = { app: 'gold-silver-tracker', version: 2, exported: new Date().toISOString(),
+                    rates: { gold: prefs.goldRate, silver: prefs.silverRate }, records: out };
+  return new Blob([JSON.stringify(payload)], { type: 'application/json' });
+}
+
+async function exportBackup() {
+  if (!records.some(notEmpty)) { toast('There are no records to export yet.'); return; }
+  toast('Preparing backup…', { sticky: true });
+  try {
+    const blob = await buildBackup();
+    hideToast();
+    if (await handOff(blob, `GoldSilverTracker_${today()}.json`)) {
+      prefs.lastBackup = Date.now(); savePrefs(); updateBackupNote();
+      toast('Backup created.');
     }
+  } catch (e) { toast('Could not create the backup.', { duration: 5000 }); }
+}
 
-    function refresh() {
-        const year = document.getElementById('yearFilter').value;
-        let totalGoldINR = 0;
-        let totalSilverINR = 0;
-        let totalGold = 0;
-        let totalSilver = 0;
+async function exportCSV() {
+  const rows = [['Date', 'Description', 'Gold (g)', 'Silver (g)', 'Actual price (INR)', 'Discount %', 'Net price (INR)', 'Saved (INR)', 'Gold cost (INR)', 'Silver cost (INR)', 'No grams (INR)']];
+  const text = v => { v = str(v); if (/^[=+\-@\t\r]/.test(v)) v = "'" + v; return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+  records.filter(notEmpty).sort((a, b) => -cmp(a, b)).forEach(r => {
+    const c = calc(r);
+    rows.push([r.date, text(r.item), c.g || '', c.s || '', c.price.toFixed(2), c.d || '', c.net.toFixed(2), c.disc.toFixed(2), c.gold.toFixed(2), c.silver.toFixed(2), c.other.toFixed(2)]);
+  });
+  const blob = new Blob(['\ufeff' + rows.map(r => r.join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
+  await handOff(blob, `GoldSilverTracker_${today()}.csv`);
+}
 
-        document.querySelectorAll('.item-card').forEach(card => {
-            const dt = card.querySelector('.d-date').value;
-            const goldGrams = parseFloat(card.querySelector('.d-gold').value) || 0;
-            const silverGrams = parseFloat(card.querySelector('.d-silver').value) || 0;
-            const p = parseFloat(card.querySelector('.d-price').value) || 0;
-            const d = parseFloat(card.querySelector('.d-disc').value) || 0;
-            
-            const discAmt = p * (d / 100);
-            const netPrice = p - discAmt;
+function exportSheet() {
+  modal({
+    title: 'Export',
+    body: 'A full backup includes your invoices and can be imported again later. The spreadsheet file opens in Excel or Sheets.',
+    actions: [
+      { label: 'Full backup (JSON)', primary: true, onClick: exportBackup },
+      { label: 'Spreadsheet (CSV)', onClick: exportCSV },
+      { label: 'Cancel' }
+    ]
+  });
+}
 
-            // Per-item indicators
-            const netSpan = card.querySelector('.net-val');
-            const diffSpan = card.querySelector('.diff-val');
+async function handleImportFile(file) {
+  if (!file) return;
+  let json;
+  try { json = JSON.parse(await readAs(file, 'readAsText')); }
+  catch (e) { toast('That file is not a valid backup.', { duration: 5000 }); return; }
+  const arr = Array.isArray(json) ? json : (json && Array.isArray(json.records) ? json.records : null);
+  if (!arr) { toast('That file is not a Gold & Silver Tracker backup.', { duration: 5000 }); return; }
+  const incoming = arr.filter(x => x && typeof x === 'object').map((x, i) => normalize({ ...x, created: x.created || i + 1 }));
+  if (!incoming.length) { toast('The backup has no records.'); return; }
+  modal({
+    title: 'Import backup',
+    body: `Found ${plural(incoming.length, 'record')} in ${file.name}. Merging keeps your current records and skips duplicates. Replacing removes your current records first.`,
+    actions: [
+      { label: 'Merge with current records', primary: true, onClick: () => { applyImport('merge', incoming, json); } },
+      { label: 'Replace all current data', danger: true, onClick: () => { applyImport('replace', incoming, json); } },
+      { label: 'Cancel' }
+    ]
+  });
+}
 
-            if (p > 0) {
-                netSpan.innerText = `Net: ₹${netPrice.toLocaleString('en-IN')}`;
-                diffSpan.innerText = d > 0 ? `Saved: ₹${discAmt.toLocaleString('en-IN')}` : "";
-            } else {
-                netSpan.innerText = ""; diffSpan.innerText = "";
-            }
-
-            // Year Filtering
-            if(!dt || dt.startsWith(year)) {
-                // Cost distribution logic
-                if (goldGrams > 0 && silverGrams === 0) {
-                    totalGoldINR += netPrice;
-                } else if (silverGrams > 0 && goldGrams === 0) {
-                    totalSilverINR += netPrice;
-                } else if (goldGrams > 0 && silverGrams > 0) {
-                    // Split proportional to approximate relative asset value (Gold is ~80x silver valuation per gram)
-                    const goldRatio = (goldGrams * 80) / ((goldGrams * 80) + silverGrams);
-                    totalGoldINR += netPrice * goldRatio;
-                    totalSilverINR += netPrice * (1 - goldRatio);
-                } else {
-                    // Default fallback if no grams are filled but price exists
-                    totalGoldINR += netPrice;
-                }
-
-                totalGold += goldGrams;
-                totalSilver += silverGrams;
-                card.style.display = "grid";
-            } else {
-                card.style.display = "none";
-            }
-        });
-
-        document.getElementById('totalGold').innerText = `${totalGold.toLocaleString('en-IN')}g`;
-        document.getElementById('totalSilver').innerText = `${totalSilver.toLocaleString('en-IN')}g`;
-        document.getElementById('goldINR').innerText = `₹${totalGoldINR.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
-        document.getElementById('silverINR').innerText = `₹${totalSilverINR.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+async function applyImport(mode, incoming, json) {
+  toast('Importing…', { sticky: true });
+  try {
+    await migrateInline(incoming);
+    const rates = json && !Array.isArray(json) && json.rates;
+    let added = 0, skipped = 0;
+    if (mode === 'replace') {
+      finalizePending();
+      records = incoming; added = incoming.length;
+      if (rates) { prefs.goldRate = str(rates.gold); prefs.silverRate = str(rates.silver); savePrefs(); syncRateInputs(); }
+    } else {
+      const ids = new Set(records.map(r => r.id)), sigs = new Set(records.map(sig));
+      incoming.forEach(r => {
+        if (ids.has(r.id) || sigs.has(sig(r))) { skipped++; if (r.fileId && idb) idbDel(r.fileId).catch(() => {}); }
+        else { records.push(r); added++; }
+      });
     }
+    persistNow(); render();
+    if (mode === 'replace') gcFiles();
+    toast(`Imported ${plural(added, 'record')}` + (skipped ? `, skipped ${skipped} duplicate${skipped === 1 ? '' : 's'}.` : '.'), { duration: 4500 });
+  } catch (e) { toast('Import failed. Your current data was not changed.', { duration: 5000 }); }
+}
 
-    function save() {
-        const list = [];
-        document.querySelectorAll('.item-card').forEach(c => {
-            list.push({
-                date: c.querySelector('.d-date').value,
-                item: c.querySelector('.d-item').value,
-                gold: c.querySelector('.d-gold').value,
-                silver: c.querySelector('.d-silver').value,
-                price: c.querySelector('.d-price').value,
-                disc: c.querySelector('.d-disc').value,
-                file: c.querySelector('.d-file').value
-            });
-        });
-        localStorage.setItem(DB_KEY, JSON.stringify(list));
-    }
+function syncRateInputs() { $('#goldRate').value = prefs.goldRate || ''; $('#silverRate').value = prefs.silverRate || ''; }
 
-    async function exportData() {
-        const data = localStorage.getItem(DB_KEY);
-        const year = document.getElementById('yearFilter').value;
-        if ('showSaveFilePicker' in window) {
-            try {
-                const h = await window.showSaveFilePicker({ suggestedName: `MyExpenses_${year}.json` });
-                const w = await h.createWritable();
-                await w.write(data);
-                await w.close();
-            } catch (err) { }
-        } else {
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(new Blob([data]));
-            a.download = `MyExpenses_${year}.json`;
-            a.click();
-        }
-    }
+/* =====================================================================
+   Wire up buttons and start
+   ===================================================================== */
+$('#btnAdd').addEventListener('click', addRecord);
+$('#btnExport').addEventListener('click', exportSheet);
+$('#bannerBackup').addEventListener('click', exportBackup);
+$('#btnImport').addEventListener('click', () => $('#importFile').click());
+$('#importFile').addEventListener('change', e => {
+  const f = e.target.files[0];
+  e.target.value = '';                                // lets you pick the same file again later
+  handleImportFile(f);
+});
 
-    function importData(e) {
-        const r = new FileReader();
-        r.onload = () => { localStorage.setItem(DB_KEY, r.result); init(); };
-        r.readAsText(e.target.files[0]);
-    }
+async function boot() {
+  loadPrefs();
+  if (prefs.year !== 'all') prefs.year = String(prefs.year);
+  syncRateInputs();
+  records = loadRecords();
+  render();
+  if (loadFailed) toast('Saved data could not be read. A copy was kept aside, nothing was deleted.', { duration: 8000 });
 
-    window.onload = init;
+  idb = await openIDB();
+  if (idb) {
+    if (await migrateInline(records)) { persistNow(); render(); toast('Invoices moved to safer storage.'); }
+    gcFiles();
+  }
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
+}
+boot();
+})();
 </script>
-
 </body>
 </html>
